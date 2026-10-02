@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VayuMesh</title>
+  <meta name="description"
+    content="VayuMesh: AI-powered single drone video to metric-accurate 3D solid model reconstruction. VGGT + COLMAP, GTSAM sensor fusion, and 3D Gaussian Splatting for Indian Army Ministry of Defence — SIH 26158." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2300f59b'/%3E%3Cstop offset='100%25' stop-color='%2300e5ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='7' fill='url(%23g)'/%3E%3Cline x1='16' y1='16' x2='6.5' y2='6.5' stroke='%23030712' stroke-width='2.6' stroke-linecap='round'/%3E%3Cline x1='16' y1='16' x2='25.5' y2='6.5' stroke='%23030712' stroke-width='2.6' stroke-linecap='round'/%3E%3Cline x1='16' y1='16' x2='6.5' y2='25.5' stroke='%23030712' stroke-width='2.6' stroke-linecap='round'/%3E%3Cline x1='16' y1='16' x2='25.5' y2='25.5' stroke='%23030712' stroke-width='2.6' stroke-linecap='round'/%3E%3Cellipse cx='6.5' cy='6.5' rx='4.5' ry='2' fill='%23030712'/%3E%3Cellipse cx='25.5' cy='6.5' rx='4.5' ry='2' fill='%23030712'/%3E%3Cellipse cx='6.5' cy='25.5' rx='4.5' ry='2' fill='%23030712'/%3E%3Cellipse cx='25.5' cy='25.5' rx='4.5' ry='2' fill='%23030712'/%3E%3Crect x='11.5' y='11.5' width='9' height='9' rx='2' fill='%23030712'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%2300e5ff'/%3E%3Ccircle cx='16' cy='21.2' r='1.3' fill='%23030712'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════
+     LOADING SCREEN
+═══════════════════════════════════════════════════════════ -->
+  <div id="loading-screen">
+    <div class="loader-logo">VAYUMESH</div>
+    <div class="loader-subtitle">SIH 26158 · Indian Army MoD · AI Drone 3D Reconstruction</div>
+    <div class="loader-bar-wrap">
+      <div class="loader-fill"></div>
+    </div>
+    <div class="loader-pct mono">0%</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+     NAVIGATION
+═══════════════════════════════════════════════════════════ -->
+  <nav id="main-nav" role="navigation" aria-label="Main navigation">
+    <a class="nav-logo" href="#hero">
+    <div class="nav-logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="12" y1="12" x2="4"  y2="4"  stroke="#030712" stroke-width="2" stroke-linecap="round"/>
+          <line x1="12" y1="12" x2="20" y2="4"  stroke="#030712" stroke-width="2" stroke-linecap="round"/>
+          <line x1="12" y1="12" x2="4"  y2="20" stroke="#030712" stroke-width="2" stroke-linecap="round"/>
+          <line x1="12" y1="12" x2="20" y2="20" stroke="#030712" stroke-width="2" stroke-linecap="round"/>
+          <ellipse cx="4"  cy="4"  rx="3" ry="1.3" fill="#030712"/>
+          <ellipse cx="20" cy="4"  rx="3" ry="1.3" fill="#030712"/>
+          <ellipse cx="4"  cy="20" rx="3" ry="1.3" fill="#030712"/>
+          <ellipse cx="20" cy="20" rx="3" ry="1.3" fill="#030712"/>
+          <rect x="9.5" y="9.5" width="5" height="5" rx="1" fill="#030712"/>
+          <circle cx="12" cy="14.8" r="1.1" fill="#030712"/>
+        </svg>
+      </div>
+      <span class="nav-brand-title">VAYUMESH</span>
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#video-section">VIDEO</a></li>
+      <li><a href="#viewers-section">3D VIEWERS</a></li>
+      <li><a href="#pipeline-section">PIPELINE</a></li>
+      <li><a href="#tech-section">TECH</a></li>
+      <li><a href="#stats-section">METRICS</a></li>
+    </ul>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════════
+     HERO — 3D "VAYUMESH" BACKDROP & HORIZONTAL PATROL DRONE
+═══════════════════════════════════════════════════════════ -->
+  <section id="hero" aria-label="Hero: VayuMesh 3D Drone & System Intro">
+    <!-- 3D Canvas with 3D VAYUMESH Typography Backdrop & Floating Drone -->
+    <canvas id="hero-canvas" aria-hidden="true"></canvas>
+    <div class="hero-bg-gradient"></div>
+    <div class="hero-scanline"></div>
+
+    <div class="hero-content">
+      <div class="hero-eye-catch">
+        <span class="tag tag-green"><span class="dot-pulse"></span> TEAM DREAMERS · ID: 132101</span>
+        <span class="tag tag-cyan">SIH 2026 · PS ID: 26158</span>
+        <span class="tag tag-amber">INDIAN ARMY · MINISTRY OF DEFENCE</span>
+      </div>
+
+      <h1 class="hero-title">
+        <span class="word">DRONE</span>
+        <span class="word">VIDEO</span>
+        <span class="word word-accent">→</span>
+        <span class="word">METRIC</span>
+        <br />
+        <span class="word word-accent">3D</span>
+        <span class="word">SOLID</span>
+        <span class="word">MODEL</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        <strong>“One Flight. One Video. One Shot at the Truth.”</strong><br />
+        VayuMesh converts a single-pass drone reconnaissance video into a metric-accurate, dimensioned 3D solid model in
+        under 15 minutes using VGGT + COLMAP, GTSAM sensor fusion, and 3D Gaussian Splatting — engineered for military
+        structural truth, battle-damage assessment, and zero-GCP sovereign intelligence.
+      </p>
+
+      <div class="hero-badges">
+        <span class="tag tag-green">Under 15 Minutes Runtime</span>
+        <span class="tag tag-cyan">Zero-GCP Metric Solving</span>
+        <span class="tag tag-amber">±1.1mm Structural Precision</span>
+        <span class="tag tag-green">100% Air-Gapped &amp; Offline</span>
+        <span class="tag tag-cyan">Confidence Heatmap: Green/Yellow/Red</span>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-value">&lt; 15<span style="font-size:16px;color:#00e5ff">min</span></span>
+          <span class="stat-label">Full Pipeline Runtime</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">±1.1<span style="font-size:16px;color:#00e5ff">mm</span></span>
+          <span class="stat-label">Absolute Metric Error</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">0<span style="font-size:16px;color:#00e5ff"> GCPs</span></span>
+          <span class="stat-label">No Ground Markers Needed</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">84.2<span style="font-size:16px;color:#00e5ff">%</span></span>
+          <span class="stat-label">Ray Error Reduction (UAFF3D)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">98.4<span style="font-size:16px;color:#00e5ff">%</span></span>
+          <span class="stat-label">Mean Confidence Score</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-scroll-hint" aria-hidden="true">
+      <div class="scroll-arrow"></div>
+      SCROLL TO EXPLORE
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+     VIDEO SECTION — Taj Mahal Drone Footage Player & Neural HUD
+═══════════════════════════════════════════════════════════ -->
+  <section id="video-section" aria-label="Reference drone video footage with neural tracking">
+    <div class="section-wrapper">
+      <div class="section-heading">
+        <div class="section-eyebrow">STAGE 1 INPUT · PHOTOGRAMMETRIC BASELINE</div>
+        <h2 class="section-title">Reference Drone Reconnaissance Video</h2>
+        <p class="section-desc">
+          Single orbital video pass of Taj Mahal, Agra — processed through VayuMesh to extract intelligent keyframes,
+          mask dynamic tourists, solve camera poses with VGGT, and recover metric scale via GTSAM factor graphs.
+        </p>
+      </div>
+
+      <div class="video-wrapper">
+        <!-- Video Element -->
+        <video id="drone-video" preload="metadata" loop muted playsinline
+          style="width:100%;display:block;max-height:540px;object-fit:cover;background:#000;">
+          <source src="/taj_mahal_drone.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        <!-- Canvas Tracking Overlay -->
+        <div class="video-hud-overlay">
+          <canvas id="video-canvas-overlay"></canvas>
+
+          <!-- HUD Corners -->
+          <div class="hud-corner hud-tl">
+            <div class="hud-status">
+              <span class="dot-pulse" style="color:var(--c-green)"></span>
+              STAGE 1 INPUT [AGRA UAV RECON]
+            </div>
+            <div class="hud-row">
+              <span class="hud-lbl">ALT:</span>
+              <span class="hud-val" id="hud-altitude">48.2m</span>
+            </div>
+            <div class="hud-row">
+              <span class="hud-lbl">DIST:</span>
+              <span class="hud-val" id="hud-distance">0.0m</span>
+            </div>
+          </div>
+
+          <div class="hud-corner hud-tr">
+            <div class="hud-status">GPS / RTK LOCK</div>
+            <div class="hud-row" style="justify-content:flex-end;">
+              <span class="hud-lbl">SAT:</span>
+              <span class="hud-val" id="hud-satellites">14</span>
+            </div>
+            <div class="hud-row" style="justify-content:flex-end;">
+              <span class="hud-lbl">KEYPOINTS:</span>
+              <span class="hud-val" id="hud-keypoints">140</span>
+            </div>
+          </div>
+
+          <div class="hud-corner hud-bl">
+            <div class="hud-row"><span class="hud-lbl">TARGET:</span> <span class="hud-val">TAJ MAHAL, AGRA 🇮🇳</span>
+            </div>
+            <div class="hud-row"><span class="hud-lbl">LAT/LON:</span> <span class="hud-val mono"
+                style="font-size:9px;">27.1751° N · 78.0421° E</span></div>
+          </div>
+
+          <div class="hud-corner hud-br">
+            <div class="hud-row" style="justify-content:flex-end;">
+              <span class="hud-lbl">TIME:</span>
+              <span class="hud-val mono" id="hud-time">00:00</span>
+            </div>
+            <div class="hud-row" style="justify-content:flex-end;">
+              <span class="hud-lbl">ENCODE:</span>
+              <span class="hud-val">1080p · 30fps · H.264</span>
+            </div>
+          </div>
+        </div><!-- /video-hud-overlay -->
+
+        <!-- Controls Bar -->
+        <div class="video-controls-bar">
+          <div class="video-progress-wrap">
+            <div id="video-progress" role="slider" aria-label="Video progress" title="Click to seek">
+              <div id="video-progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="video-controls-row">
+            <button id="play-btn" class="ctrl-btn" aria-label="Play/Pause drone video" title="Play / Pause">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+            </button>
+
+            <button id="sound-btn" class="ctrl-btn" title="Toggle tactical HUD sounds">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+            </button>
+
+            <div style="width:1px;height:22px;background:var(--c-border-dim);margin:0 4px;"></div>
+
+            <button id="track-kp-btn" class="ctrl-btn active" title="Toggle SuperPoint keypoints">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="2" />
+                <path
+                  d="M12 2v4m0 12v4M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+              </svg>
+            </button>
+            <span class="ctrl-label">KP</span>
+
+            <button id="track-vec-btn" class="ctrl-btn active" title="Toggle optical flow vectors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+            <span class="ctrl-label">FLOW</span>
+
+            <span class="ctrl-time mono" id="hud-time-bar">00:00</span>
+          </div>
+        </div>
+      </div><!-- /video-wrapper -->
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+     3D VIEWERS SECTION (Point Cloud · CAD Wireframe · Confidence Heatmap)
+═══════════════════════════════════════════════════════════ -->
+  <section id="viewers-section" aria-label="3D reconstruction viewers">
+    <div class="section-wrapper">
+      <div class="section-heading">
+        <div class="section-eyebrow">TRUSTED 3D OUTPUT · METRIC RECONSTRUCTION SUITE</div>
+        <h2 class="section-title">Synchronized 3D Viewers &amp; Dimension Matrix</h2>
+        <p class="section-desc">
+          Inspect the reconstructed Taj Mahal across three synchronized photogrammetric modalities — LiDAR point cloud
+          with drone trajectory, watertight CAD wireframe solid mesh, and the Army confidence error heatmap.
+        </p>
+      </div>
+
+      <!-- ── MASTER TOOLBAR CONTAINER ──────────────────────────────────────── -->
+      <div id="toolbar-home">
+        <div class="viewers-toolbar" role="toolbar" aria-label="3D viewer controls">
+
+          <!-- POI Jump -->
+          <div class="toolbar-group">
+            <span class="toolbar-label">POI Jump</span>
+            <button class="tool-btn active" data-poi="overview" title="Full overview">⬡ Overview</button>
+            <button class="tool-btn" data-poi="dome" title="Central dome apex">◉ Dome</button>
+            <button class="tool-btn" data-poi="pishtaq" title="Grand arch pishtaq">⌒ Pishtaq</button>
+            <button class="tool-btn" data-poi="minaret" title="Corner minaret">↑ Minaret</button>
+            <button class="tool-btn" data-poi="interior" title="Interior chamber">⊕ Interior</button>
+            <button class="tool-btn" data-poi="plinth" title="Plinth base">□ Plinth</button>
+          </div>
+
+          <div class="toolbar-separator"></div>
+
+          <!-- Interior Slicing -->
+          <div class="toolbar-group">
+            <span class="toolbar-label">X-Ray Slice</span>
+            <div class="slider-wrap">
+              <span style="font-size:10px;font-family:var(--font-mono);color:var(--c-text-dim)">0%</span>
+              <input type="range" id="slicing-slider" class="hud-slider" min="0" max="100" value="0"
+                title="Slice interior to reveal chamber" />
+              <span style="font-size:10px;font-family:var(--font-mono);color:var(--c-text-dim)">100%</span>
+            </div>
+          </div>
+
+          <div class="toolbar-separator"></div>
+
+          <!-- Dimension Matrix & Measure Tool -->
+          <div class="toolbar-group">
+            <button id="dim-toggle-btn" class="tool-btn" title="Toggle Real-World Dimension Matrix in All 3 Viewers">⊞
+              Dimensions</button>
+            <button id="measure-btn" class="tool-btn" title="Click 2 points on any model to measure metric distance">⟺
+              Measure</button>
+            <button id="sync-cam-btn" class="tool-btn active"
+              title="Synchronize camera orientation across all 3 viewers">⟳ Sync Cams</button>
+          </div>
+
+          <div class="toolbar-separator"></div>
+
+          <!-- Point Cloud Size -->
+          <div class="toolbar-group">
+            <span class="toolbar-label">PC Size</span>
+            <div class="slider-wrap">
+              <input type="range" id="pc-size-slider" class="hud-slider" min="2" max="18" value="7"
+                title="Point cloud particle size" />
+            </div>
+          </div>
+
+          <div class="toolbar-separator"></div>
+
+          <!-- Heatmap Mode -->
+          <div class="toolbar-group">
+            <span class="toolbar-label">Heatmap</span>
+            <button class="tool-btn active" data-heatmode="0" title="Confidence heatmap">◈ Confidence</button>
+            <button class="tool-btn" data-heatmode="1" title="Surface normal direction">▷ Normals</button>
+            <button class="tool-btn" data-heatmode="2" title="Depth variance view">⬡ Variance</button>
+          </div>
+
+        </div><!-- /viewers-toolbar -->
+      </div><!-- /toolbar-home -->
+
+      <!-- ── Measure Readout Bar ──────────────────────────────────────────────── -->
+      <div id="measure-readout" class="mono">Activate ⟺ MEASURE tool then click any 2 points on the 3D models (works
+        across Point Cloud, Wireframe, and Heatmap, including Fullscreen) to compute metric span.</div>
+
+      <!-- ── THREE VIEWER PANELS ─────────────────────────────────────────────── -->
+      <div class="viewers-grid" style="margin-top:14px;">
+
+        <!-- Panel 1: Point Cloud -->
+        <div class="viewer-panel" id="panel-pointcloud">
+          <div class="viewer-header">
+            <div class="viewer-title">
+              <span class="viewer-dot green"></span>
+              1. Point Cloud — LiDAR / SfM
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="tag tag-green">85K PTS</span>
+              <span class="tag tag-cyan">UAV ORBIT</span>
+              <button class="fullscreen-btn" data-target="panel-pointcloud" title="Fullscreen"
+                aria-label="Enter fullscreen for Point Cloud viewer">⛶</button>
+            </div>
+          </div>
+          <div class="viewer-canvas-wrap">
+            <div id="viewer-pointcloud" class="viewer-3d-target"></div>
+          </div>
+          <div class="viewer-footer">
+            ↔ DRAG TO ORBIT &nbsp;·&nbsp; SCROLL TO ZOOM &nbsp;·&nbsp; RIGHT-DRAG TO PAN
+            &nbsp;·&nbsp; <span style="color:var(--c-green)">USE ⊞ DIMENSIONS TO TOGGLE MATRIX</span>
+          </div>
+        </div>
+
+        <!-- Panel 2: Wireframe Mesh -->
+        <div class="viewer-panel" id="panel-wireframe">
+          <div class="viewer-header">
+            <div class="viewer-title">
+              <span class="viewer-dot cyan"></span>
+              2. CAD Wireframe Solid Mesh
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="tag tag-cyan">WATERTIGHT</span>
+              <span class="tag tag-amber">METRIC</span>
+              <button class="fullscreen-btn" data-target="panel-wireframe" title="Fullscreen"
+                aria-label="Enter fullscreen for Wireframe viewer">⛶</button>
+            </div>
+          </div>
+          <div class="viewer-canvas-wrap">
+            <div id="viewer-wireframe" class="viewer-3d-target"></div>
+          </div>
+          <div class="viewer-footer">
+            ↔ ORBIT &nbsp;·&nbsp; USE SLICE SLIDER TO INSPECT INTERIOR CHAMBER
+            &nbsp;·&nbsp; <span style="color:var(--c-cyan)">METRIC DIMENSIONS IN METRES (m)</span>
+          </div>
+        </div>
+
+        <!-- Panel 3: Confidence Heatmap -->
+        <div class="viewer-panel" id="panel-heatmap">
+          <div class="viewer-header">
+            <div class="viewer-title">
+              <span class="viewer-dot amber"></span>
+              3. Confidence Error Heatmap
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="tag tag-green">98.4%</span>
+              <span class="tag tag-amber">±1.1mm</span>
+              <button class="fullscreen-btn" data-target="panel-heatmap" title="Fullscreen"
+                aria-label="Enter fullscreen for Heatmap viewer">⛶</button>
+            </div>
+          </div>
+          <div class="viewer-canvas-wrap" style="position:relative;">
+            <div id="viewer-heatmap" class="viewer-3d-target"></div>
+
+            <!-- Metric Probe Readout -->
+            <div id="heatmap-probe-readout" role="status" aria-live="polite"></div>
+
+            <!-- Heatmap Color Legend -->
+            <div class="heatmap-legend" aria-label="Heatmap legend">
+              <div class="legend-bar"></div>
+              <div class="legend-labels">
+                <span>HIGH ERR (RED)</span>
+                <span>MED (YEL)</span>
+                <span>HIGH CONF (GRN)</span>
+              </div>
+            </div>
+          </div>
+          <div class="viewer-footer">
+            ↔ ORBIT &nbsp;·&nbsp; HOVER SURFACE TO PROBE METRIC ERROR
+            &nbsp;·&nbsp; <span style="color:var(--c-amber)">ARMY CONFIDENCE MAP ACTIVE</span>
+          </div>
+        </div>
+
+      </div><!-- /viewers-grid -->
+
+      <!-- Architectural Metric Dimension Callout Strip -->
+      <div
+        style="margin-top:24px;padding:16px 24px;background:rgba(6,13,24,0.92);border:1px solid var(--c-border);display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+        <span
+          style="font-family:var(--font-mono);font-size:10px;color:var(--c-cyan);letter-spacing:0.16em;text-transform:uppercase;font-weight:700;">METRIC
+          DIMENSION MATRIX (METRES):</span>
+        <span class="tag tag-green">Total Apex Height: 73.0 m</span>
+        <span class="tag tag-cyan">Marble Plinth Span: 95.16 m × 95.16 m</span>
+        <span class="tag tag-green">Main Monument Block: 57.0 m × 57.0 m</span>
+        <span class="tag tag-amber">4× Corner Minarets: 40.0 m</span>
+        <span class="tag tag-cyan">Bulbous Onion Dome: 25.2 m Dia</span>
+        <span class="tag tag-green">Pishtaq Grand Arch: 33.0 m</span>
+        <span class="tag tag-amber">Kalash Gilded Finial: 9.8 m</span>
+        <span class="tag tag-cyan">Sandstone Terrace: 124.0 m</span>
+        <span class="tag tag-green">Hauz-i-Kausar Pool: 80.0 m × 17.0 m</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+     SYSTEM PIPELINE SECTION (Exact 8 Stages from SIH PDF)
+═══════════════════════════════════════════════════════════ -->
+  <section id="pipeline-section" aria-label="VayuMesh 8-stage AI reconstruction pipeline">
+    <div class="section-wrapper">
+      <div class="section-heading">
+        <div class="section-eyebrow">VAYUMESH | SYSTEM PIPELINE (SIH 26158)</div>
+        <h2 class="section-title">From a Single Drone Video to Trusted 3D Intelligence</h2>
+        <p class="section-desc">
+          End-to-end 8-stage automated photogrammetric architecture converting raw UAV flight captures into
+          metric-accurate, georeferenced 3D digital twins in under 15 minutes.
+        </p>
+      </div>
+
+      <div class="pipeline-grid">
+        <!-- Stage 1 -->
+        <div class="pipeline-card">
+          <div class="pipeline-stage-num mono">STAGE 01</div>
+          <h3 class="pipeline-stage-title">Input: Drone Video + Telemetry</h3>
+          <p class="pipeline-stage-desc">
+            Single-pass UAV video ingest (MP4) synchronized with GNSS/GPS coordinates, high-frequency IMU attitude
+            orientation, and RTK/PPK centimetre-grade positioning stream.
+          </p>
+          <div class="pipeline-output mono"><span class="lbl">INPUT:</span> MP4 + GNSS + IMU + RTK/PPK</div>
+        </div>
+
+        <!-- Stage 2 -->
+        <div class="pipeline-card">
+          <div class="pipeline-stage-num mono">STAGE 02</div>
+          <h3 class="pipeline-stage-title">Preprocessing: Keyframe Selection</h3>
+          <p class="pipeline-stage-desc">
+            Intelligent automated frame extraction, Laplacian blur rejection, optical flow overlap validation, and
+            texture entropy ranking to select optimal reconstruction baselines.
+          </p>
+          <div class="pipeline-output mono"><span class="lbl">OUTPUT:</span> Optimized Keyframes</div>
+        </div>
+
+        <!-- Stage 3 -->
+        <div class="pipeline-card">
+          <div class="pipeline-stage-num mono">STAGE 03</div>
+          <h3 class="pipeline-stage-title">Dynamic Object Masking</h3>
+          <p class="pipeline-stage-desc">
+            Segment Anything Model 2 (SAM2) video segmentation combined with YOLO detection to identify and mask moving
+            people, tourists, and vehicles, isolating static heritage surfaces.
+          </p>
+          <div class="pipeline-output mono"><span class="lbl">OUTPUT:</span> Clean Reconstruction Frames</div>
+        </div>
+
+        <!-- Stage 4 -->
+        <div class="pipeline-card">
+          <div class="pipeline-stage-num mono">STAGE 04</div>
+          <h3 class="pipeline-stage-title">3D Reconstruction: VGGT + COLMAP</h3>
+          <p class="pipeline-stage-desc">
+            Visual Geometry Grounded Transformer (CVPR 2025) estimates dense monocular depth and camera poses across
+            sparse viewpoints; COLMAP refines geometric bundle adjustment.
+          </p>
+          <div class="pipeline-output mono"><span class="lbl">OUTPUT:</span> Camera Poses + Point Cloud</div>
+        </div>
+
+        <!-- Stage 5 -->
+        <div class="pipeline-card">
+          <div class="pipeline-stage-num mono">STAGE 05</div>
+          <h3 class="pipeline-stage-title">Sensor Fusion &amp; Georeferencing</h3>
+          <p class="pipeline-stage-desc">
+            GTSAM factor-graph non-linear optimization fusing GNSS, IMU, and RTK priors to recover absolute metric scale
+            (1 unit = 1m) without manual Ground Control Points (Zero-GCP).
+          </p>
+          <div class="pipeline-output mono"><span class="lbl">OUTPUT:</span> Metric 3D Structure (m)</div>
+        </div>
+
+        <!-- Stage 6 -->
+        <div class="pipeline-card">
+          <div class="pipeline-stage-num mono">STAGE 06</div>
+          <h3 class="pipeline-stage-title">Dense 3D Model: Gaussian Splatting</h3>
+          <p class="pipeline-stage-desc">
+            Converts sparse structure into dense 3D representation via DroneSplat (3DGS) and HiDeGS adaptive
+            densification, coupled with Poisson reconstruction for watertight solid mesh generation.
+          </p>
+          <div class="pipeline-output mono"><span class="lbl">OUTPUT:</span> Detailed 3D Solid Model</div>
+        </div>
+
+        <!-- Stage 7 -->
+        <div class="pipeline-card">
+          <div class="pipeline-stage-num mono">STAGE 07</div>
+          <h3 class="pipeline-stage-title">Confidence Engine Reliability</h3>
+          <p class="pipeline-stage-desc">
+            Quantifies reconstruction reliability per surface triangle using reprojection error, multi-view depth
+            consistency, photometric residuals, and point density.
+          </p>
+          <div class="pipeline-output mono"><span class="lbl">OUTPUT:</span> Confidence Score + Heatmap</div>
+        </div>
+
+        <!-- Stage 8 -->
+        <div class="pipeline-card">
+          <div class="pipeline-stage-num mono">STAGE 08</div>
+          <h3 class="pipeline-stage-title">Trusted 3D Intelligence Output</h3>
+          <p class="pipeline-stage-desc">
+            Actionable defence outputs: watertight metric 3D model, Green/Yellow/Red confidence map, georeferenced
+            orthomosaic (GeoTIFF/LAS/OBJ/GLB/KMZ), and terrain elevation data.
+          </p>
+          <div class="pipeline-output mono"><span class="lbl">OUTPUT:</span> Mission-Ready Intelligence</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+     TECHNICAL APPROACH & FEASIBILITY SECTION (From PDF Pages 3 & 4)
+═══════════════════════════════════════════════════════════ -->
+  <section id="tech-section" aria-label="Technical approach and tech stack">
+    <div class="section-wrapper">
+      <div class="section-heading">
+        <div class="section-eyebrow">DEFENCE FEASIBILITY &amp; TECHNICAL STACK</div>
+        <h2 class="section-title">Open-Source Proven Technology Stack</h2>
+        <p class="section-desc">
+          Modular, offline-ready software-first architecture designed for disconnected, challenging operational military
+          environments.
+        </p>
+      </div>
+
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-card-header mono">CORE RECONSTRUCTION ENGINE</div>
+          <h4 class="tech-card-title">VGGT / VGGT Omega + COLMAP</h4>
+          <p class="tech-card-desc">
+            Feed-forward visual geometry transformer foundation model handling sparse, low-overlap (10–30%) single-pass
+            drone aerial video where classical photogrammetry collapses.
+          </p>
+        </div>
+
+        <div class="tech-card">
+          <div class="tech-card-header mono">UAV-DOMAIN FINE-TUNING</div>
+          <h4 class="tech-card-title">UAFF3D · PyTorch 2.3.1 + CUDA 12.1</h4>
+          <p class="tech-card-desc">
+            Fine-tuned on UAVFF3D (170k real + 370k synthetic aerial images with LiDAR ground truth), cutting Ray Error
+            by 84.2%, Pose ATE by 76.0%, and Chamfer Distance by 41.1%.
+          </p>
+        </div>
+
+        <div class="tech-card">
+          <div class="tech-card-header mono">SENSOR FUSION &amp; SCALE</div>
+          <h4 class="tech-card-title">GTSAM · ORB-SLAM3 · RTKLIB</h4>
+          <p class="tech-card-desc">
+            Visual-inertial SLAM fusing GPS/IMU with visual features to deliver metric-scale 6-DoF poses at 2–10 cm
+            accuracy, eliminating ground control point dependencies.
+          </p>
+        </div>
+
+        <div class="tech-card">
+          <div class="tech-card-header mono">DENSE 3D MODELING</div>
+          <h4 class="tech-card-title">DroneSplat (3DGS) · HiDeGS · Poisson</h4>
+          <p class="tech-card-desc">
+            Robust 3D Gaussian Splatting and screened Poisson surface reconstruction yielding watertight CAD solids,
+            dense point clouds, and confidence-colored mesh representations.
+          </p>
+        </div>
+
+        <div class="tech-card">
+          <div class="tech-card-header mono">DYNAMIC FILTERING</div>
+          <h4 class="tech-card-title">SAM2 Segmentation + YOLOv10</h4>
+          <p class="tech-card-desc">
+            Sub-frame masking of transient pedestrians, tourist crowds, vehicles, and moving vegetation to preserve
+            structural architectural truth.
+          </p>
+        </div>
+
+        <div class="tech-card">
+          <div class="tech-card-header mono">DEPLOYMENT &amp; SECURITY</div>
+          <h4 class="tech-card-title">Docker + Ubuntu · 100% Air-Gapped</h4>
+          <p class="tech-card-desc">
+            Zero network calls, zero cloud dependency. Sensitive reconnaissance data never leaves the military edge
+            device, meeting strict Ministry of Defence (MoD) security protocols.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+     STATS / METRICS SECTION
+═══════════════════════════════════════════════════════════ -->
+  <section id="stats-section" aria-label="VayuMesh performance metrics">
+    <div class="section-wrapper">
+      <div class="section-heading">
+        <div class="section-eyebrow">SYSTEM PERFORMANCE BENCHMARKS</div>
+        <h2 class="section-title">Validated Reconstruction Results</h2>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stats-cell">
+          <div class="stats-cell-value">
+            <span class="counter-stat" data-target="98.4" data-suffix="%" data-decimals="1">0%</span>
+          </div>
+          <div class="stats-cell-label">Mean Confidence Score</div>
+          <div class="stats-cell-sub">Computed per surface triangle across the entire Taj Mahal architectural model.
+          </div>
+        </div>
+        <div class="stats-cell">
+          <div class="stats-cell-value">
+            ±<span class="counter-stat" data-target="1.1" data-suffix="mm" data-decimals="1">0mm</span>
+          </div>
+          <div class="stats-cell-label">Absolute Accuracy</div>
+          <div class="stats-cell-sub">RMS metric error vs ASI / Survey of India laser ground truth measurements.</div>
+        </div>
+        <div class="stats-cell">
+          <div class="stats-cell-value">
+            <span class="counter-stat" data-target="15" data-suffix=" min" data-decimals="0">0</span>
+          </div>
+          <div class="stats-cell-label">Pipeline Processing Time</div>
+          <div class="stats-cell-sub">Full 8-stage pipeline from raw MP4 video to watertight 3D solid model.</div>
+        </div>
+        <div class="stats-cell">
+          <div class="stats-cell-value">
+            <span class="counter-stat" data-target="0" data-suffix=" GCPs" data-decimals="0">0</span>
+          </div>
+          <div class="stats-cell-label">Ground Control Points</div>
+          <div class="stats-cell-sub">Zero GCPs required. Metric scale recovered via IMU + lens model + GTSAM priors.
+          </div>
+        </div>
+        <div class="stats-cell">
+          <div class="stats-cell-value">
+            <span class="counter-stat" data-target="73.0" data-suffix="m" data-decimals="1">0m</span>
+          </div>
+          <div class="stats-cell-label">Structure Height Recovered</div>
+          <div class="stats-cell-sub">Ground terrace to Kalash finial apex. Matches ASI survey within ±2mm.</div>
+        </div>
+        <div class="stats-cell">
+          <div class="stats-cell-value">
+            <span class="counter-stat" data-target="84.2" data-suffix="%" data-decimals="1">0%</span>
+          </div>
+          <div class="stats-cell-label">Ray Error Reduction</div>
+          <div class="stats-cell-sub">Domain-adapted fine-tuning on UAVFF3D aerial dataset over baseline models.</div>
+        </div>
+        <div class="stats-cell">
+          <div class="stats-cell-value">
+            <span class="counter-stat" data-target="140" data-suffix="+" data-decimals="0">0</span>
+          </div>
+          <div class="stats-cell-label">Tracked Keypoints/Frame</div>
+          <div class="stats-cell-sub">SuperPoint + LightGlue neural keypoints tracked across low-overlap orbital frames.
+          </div>
+        </div>
+        <div class="stats-cell">
+          <div class="stats-cell-value">
+            <span class="counter-stat" data-target="0.38" data-suffix="px" data-decimals="2">0</span>
+          </div>
+          <div class="stats-cell-label">Reprojection Error</div>
+          <div class="stats-cell-sub">Mean reprojection error across all matched rays (sub-0.5px calibration
+            excellence).</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+  <footer role="contentinfo">
+    <div>
+      <div class="footer-logo">VAYUMESH</div>
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--c-cyan);letter-spacing:0.18em;margin-top:2px;">
+        TEAM DREAMERS · SIH 2026 · ID 132101</div>
+    </div>
+    <div class="footer-legal">
+      <div><strong>SIH 26158 · Smart India Hackathon 2026 · Single-Pass Drone Video to Accurate 3D Model
+          Generation</strong></div>
+      <div style="margin-top:4px;color:var(--c-text);">Developed by <strong>Team Dreamers</strong> for Indian Army &amp;
+        Ministry of Defence 🇮🇳</div>
+      <div style="margin-top:4px;">VGGT + COLMAP + GTSAM + DroneSplat 3D Gaussian Splatting Photogrammetry Suite</div>
+      <div style="margin-top:4px;font-size:9px;color:var(--c-text-dim);">Zero-GCP, 100% Offline Air-Gapped Intelligence
+        · Benchmarked against Archaeological Survey of India (ASI) standards.</div>
+    </div>
+    <div class="footer-badges">
+      <span class="tag tag-green">TEAM DREAMERS</span>
+      <span class="tag tag-cyan">SIH 2026</span>
+      <span class="tag tag-amber">ARMY MoD</span>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

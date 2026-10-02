@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Production build (optional, comment out if deploying dist to gh-pages)
+dist/
+
+# Local environment and logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+
+# Editor directories
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Duplicate raw video at root (app uses public/taj_mahal_drone.mp4)
+Taj Mahal, INDIA*
